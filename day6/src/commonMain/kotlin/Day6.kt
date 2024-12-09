@@ -77,7 +77,7 @@ private fun saveStep(position: GuardPosition, direction: Int): Boolean {
 }
 
 private fun walk(boardStart: GuardPosition, initialDirection: Int): Int {
-    var visitedCells = 0
+    var visitedCells = 1
     var currentPosition = boardStart
     var currentDirection = initialDirection
 
