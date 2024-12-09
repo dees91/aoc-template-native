@@ -1,43 +1,54 @@
-@file:OptIn(ExperimentalForeignApi::class)
-
-import kotlinx.cinterop.*
-import platform.posix.*
-
 fun main() {
-    println(part1())
-    println(part2())
-}
+    val updates = 209
+    val pages = 23
 
-fun part1(): Any {
-    return input
-}
+    val rule = Array(100) { BooleanArray(100) }
+    val page = Array(updates) { IntArray(pages) }
+    val pageCount = IntArray(updates)
 
-fun part2(): Any {
-    return input.reversed()
-}
-
-private val input: String by lazy { readInput()}
-
-private fun readInput(): String {
-    val returnBuffer = StringBuilder()
-    val cwd = getcwd(null, 0U)?.toKString()
-    val resourceDir = "${cwd}/src/commonMain/resources"
-    val file = fopen("$resourceDir/Day5.input", "r") ?:
-    throw IllegalArgumentException("Cannot open input file Day5.input")
-
-    try {
-        memScoped {
-            val readBufferLength = 64 * 1024
-            val buffer = allocArray<ByteVar>(readBufferLength)
-            var line = fgets(buffer, readBufferLength, file)?.toKString()
-            while (line != null) {
-                returnBuffer.append(line)
-                line = fgets(buffer, readBufferLength, file)?.toKString()
-            }
+    val comparator = Comparator<Int> { a, b ->
+        when {
+            rule[a][b] -> -1
+            rule[b][a] -> 1
+            else -> 0
         }
-    } finally {
-        fclose(file)
     }
 
-    return returnBuffer.toString()
+    val lines = getInput().lines()
+    var i = 0
+    for (line in lines) {
+        if (line.isBlank()) continue
+        if (line[2] == '|') {
+            val a = line.take(2).toInt()
+            val b = line.substring(3).toInt()
+            rule[a][b] = true
+        } else {
+            val tokens = line.split(',')
+            tokens.forEachIndexed { idx, token -> page[i][idx] = token.toInt() }
+            pageCount[i++] = tokens.size
+        }
+    }
+
+    var resultPart1 = 0
+    var resultPart2 = 0
+
+    for (x in 0 until updates) {
+        var ordered = true
+        for (j in 1 until pageCount[x]) {
+            if (rule[page[x][j]][page[x][j - 1]]) {
+                val subArray = page[x].copyOfRange(0, pageCount[x])
+                subArray.sortWith(comparator)
+                for (k in subArray.indices) page[x][k] = subArray[k]
+                resultPart2 += page[x][pageCount[x] / 2]
+                ordered = false
+                break
+            }
+        }
+        if (ordered) {
+            resultPart1 += page[x][pageCount[x] / 2]
+        }
+    }
+
+    println(resultPart1)
+    println(resultPart2)
 }
